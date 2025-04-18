@@ -10,7 +10,7 @@ A Python client for the [geoboundaries API](https://www.geoboundaries.org/api.ht
 Here's a basic example which shows you how to get Senegal boudaries in a geojson file.
 
 ```python
-from pygeoboundaries-geolab import get_adm
+from pygeoboundaries_geolab import get_adm
 
 sen = get_adm(territory='Senegal', adm='ADM0')
 ```
@@ -46,7 +46,7 @@ Allowed values for ```territory```:
 For more information, check out https://stefangabos.github.io/world_countries/ (the data source for ISO codes and countries names)
     
 Allowed format for```territory```:
-* a single string : "Senegal", "SEN", "เซเนกัล" 
+* a single string : "Senegal", "SEN", "เซเนกัล", 'ALL'
 * a list of strings : ["SEN", "Mali'], ["セネガル", "մալի"]
 
 Allowed values for ```adm```:
