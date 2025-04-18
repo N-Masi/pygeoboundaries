@@ -3,8 +3,7 @@
 from typing import List
 import geojson
 import requests
-#from osgeo import gdal
-import countries_iso_dict
+import .countries_iso_dict
 import iso_codes
 from requests_cache import CachedSession
 
