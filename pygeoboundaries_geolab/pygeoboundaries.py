@@ -3,8 +3,8 @@
 from typing import List
 import geojson
 import requests
-import .countries_iso_dict
-import iso_codes
+from . import countries_iso_dict
+from . import iso_codes
 from requests_cache import CachedSession
 
 _session = CachedSession(expire_after=604800) #cache expires after 1 week
