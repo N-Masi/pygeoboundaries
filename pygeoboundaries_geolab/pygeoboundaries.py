@@ -48,6 +48,8 @@ def _is_valid_iso3_code(territory: str) -> bool :
     return str.lower(territory) in iso_codes.iso_codes
 
 def _get_iso3_from_name_or_iso2(name: str) -> str:
+    if str.upper(name) == 'ALL':
+        return 'ALL'
     try :
         return str.upper(countries_iso_dict.countries_iso3[str.lower(name)])
     except KeyError as e:
@@ -60,7 +62,7 @@ def _generate_url(territory: str, adm : str | int) -> str :
         adm = _validate_adm(adm)
     else:
         adm = _get_smallest_adm(iso3)
-    if not _is_valid_adm(iso3, adm):
+    if not (iso3 == 'ALL' or _is_valid_adm(iso3, adm)):
         print("KeyError : ADM level '{}' doesn't exist for country '{}' ({})".format(adm, territory, iso3))
         raise KeyError
     return "https://www.geoboundaries.org/api/current/gbOpen/{}/{}/".format(iso3, adm)
