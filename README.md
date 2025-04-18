@@ -38,14 +38,14 @@ folium.GeoJson(mli_sen).add_to(m)
 ![Senegal and Mali's ADM1 boundaries](https://i.ibb.co/hmyY5V6/mali-sen.png)
 
 Allowed values for ```territory```: 
-* ISO 3166-1 ([alpha3](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3)) : AFG, QAT, YEM, etc.
+* ISO 3166-1 ([alpha3](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3)) : AFG, QAT, YEM, etc. (⭐️ Recommended approach)
 * ISO 3166-1 ([alpha2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2)) : AF, QA, YE, etc.
 * Country name in any of the following languages : Arabic, Armenian, Basque, Bulgarian, Chinese (simplified), Chinese (traditional), Czech, Danish, Dutch, English, Esperanto, Estonian, Finnish, French, German, Greek, Hungarian, Italian, Japanese, Korean, Lithuanian, Norwegian, Polish, Portuguese, Romanian, Russian, Slovak, Spanish, Swedish, Thai, Ukrainian.
 * 'ALL' to get boundaries for all available countries
 
 For more information, check out https://stefangabos.github.io/world_countries/ (the data source for ISO codes and countries names)
     
-Allowed format for```territory```:
+Allowed format for ```territory```:
 * a single string : "Senegal", "SEN", "เซเนกัล", 'ALL'
 * a list of strings : ["SEN", "Mali'], ["セネガル", "մալի"]
 

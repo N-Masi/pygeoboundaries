@@ -1,6 +1,6 @@
 """Runfola, Daniel, Community Contributors, and [v4.0: Lindsey Rogers, Joshua Habib, Sidonie Horn, Sean Murphy, Dorian Miller, Hadley Day, Lydia Troup, Dominic Fornatora, Natalie Spage, Kristina Pupkiewicz, Michael Roth, Carolina Rivera, Charlie Altman, Isabel Schruer, Tara McLaughlin, Russ Biddle, Renee Ritchey, Emily Topness, James Turner, Sam Updike, Helena Buckman, Neel Simpson, Jason Lin], [v2.0: Austin Anderson, Heather Baier, Matt Crittenden, Elizabeth Dowker, Sydney Fuhrig, Seth Goodman, Grace Grimsley, Rachel Layko, Graham Melville, Maddy Mulder, Rachel Oberman, Joshua Panganiban, Andrew Peck, Leigh Seitz, Sylvia Shea, Hannah Slevin, Rebecca Yougerman, Lauren Hobbs]. "geoBoundaries: A global database of political administrative boundaries." Plos one 15, no. 4 (2020): e0231866."""
 
-from typing import List
+from typing import List, Optional
 import geojson
 import requests
 from . import countries_iso_dict
@@ -70,9 +70,11 @@ def _generate_url(territory: str, adm : str | int) -> str :
 def get_metadata(territory: str, adm: str | int) -> dict:
     """
     Returns a json of specifided territory's metadata.
+    Use territory='ALL' to get metadata for all territories.
     Use adm='ALL' to get metadata for every ADM levels.
     """
-    return _session.get(_generate_url(territory, adm), verify=True).json() #TO DO get rid of verify arg
+    cached_response = _session.get(_generate_url(territory, adm), verify=True).json()
+    return cached_response #TO DO get rid of verify arg
 
 def _get_data(territory: str, adm: str, simplified: bool) -> dict:
     """Requests the geoboundaries API and returns a JSON str object of the specified territory and ADM """
@@ -84,7 +86,10 @@ def _get_data(territory: str, adm: str, simplified: bool) -> dict:
         raise
     return _session.get(json_uri).text
 
-def get_adm(territories: str | List[str], adm: str | int, simplified=True) -> dict:
+def get_adm(territories: str | List[str], 
+            adm: str | int, 
+            other_fields: Optional[str | List[str]] = None, 
+            simplified: bool = True) -> dict:
     """
     Returns a json of specifided territories at specifided adm levels.
 
@@ -108,7 +113,14 @@ def get_adm(territories: str | List[str], adm: str | int, simplified=True) -> di
         - int -1 (returns the smallest available ADM level)
         For more information about ADM levels, check out https://www.geoboundaries.org/index.html
     """
-            
+
+    # TODO: implement other metadata
+
+    if territories == 'ALL':
+        md = get_metadata('ALL', adm)
+        territories = [country['boundaryISO'] for country in md]
+        # TODO: optimize by not doing a second API call for each country
+    
     if type(territories) == str:
         return geojson.loads(_get_data(territories, adm, simplified))
     geojsons = [geojson.loads(_get_data(i, adm, simplified))['features'][0] for i in territories]
