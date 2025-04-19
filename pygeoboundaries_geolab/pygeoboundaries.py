@@ -6,6 +6,8 @@ import requests
 from . import countries_iso_dict
 from . import iso_codes
 from requests_cache import CachedSession
+import geopandas as gpd
+import pdb
 
 _session = CachedSession(expire_after=604800) #cache expires after 1 week
 
@@ -88,7 +90,6 @@ def _get_data(territory: str, adm: str, simplified: bool) -> dict:
 
 def get_adm(territories: str | List[str], 
             adm: str | int, 
-            other_fields: Optional[str | List[str]] = None, 
             simplified: bool = True) -> dict:
     """
     Returns a json of specifided territories at specifided adm levels.
@@ -104,17 +105,16 @@ def get_adm(territories: str | List[str],
     
     Allowed format for <territories> argument :
 
-        - a single string : "Senegal", "SEN", "เซเนกัล" 
+        - a single string : "Senegal", "SEN", "เซเนกัล" , 'ALL'
         - a list of strings : ["SEN", "Mali'], ["セネガル", "մալի"]
 
     Allowed values for <adm> argument :
+
         - 'ADM0' to 'ADM5' (if exists for specified country)
         - int 0 to 5
         - int -1 (returns the smallest available ADM level)
         For more information about ADM levels, check out https://www.geoboundaries.org/index.html
     """
-
-    # TODO: implement other metadata
 
     if territories == 'ALL':
         md = get_metadata('ALL', adm)
@@ -126,3 +126,78 @@ def get_adm(territories: str | List[str],
     geojsons = [geojson.loads(_get_data(i, adm, simplified))['features'][0] for i in territories]
     feature_collection = geojson.FeatureCollection(geojsons)
     return feature_collection
+
+def get_gdf(territories: str | List[str], 
+            metadata_fields: Optional[str | List[str]] = None, 
+            simplified: bool = True) -> gpd.geodataframe.GeoDataFrame:
+    '''
+    Returns a geopandas GeoDataFrame containing the requested territory geometry
+    (polygons) as well as columns for the other requested metadata fields. Default
+    columns included in the dataframe are 'geometry', 'shapeName' (country name),
+    'shapeISO', 'shapeID', 'shapeGroup', and 'shapeType' (ADM level).
+
+    Allowed values for <metadata_fields> argument, it can be a
+    single of the following strings or a list of these strings: 
+
+        - 'boundaryID'
+        - 'boundaryName'
+        - 'boundaryISO'
+        - 'boundaryYearRepresented'
+        - 'boundaryType' (ADM level)
+        - 'boundaryCanonical'
+        - 'boundarySource'
+        - 'boundaryLicense'
+        - 'licenseDetail'
+        - 'licenseSource'
+        - 'boundarySourceURL'
+        - 'sourceDataUpdateDate'
+        - 'buildDate'
+        - 'Continent'
+        - 'UNSDG-region' (more info: https://unstats.un.org/sdgs/indicators/regional-groups/)
+        - 'UNSDG-subregion' (more info: https://unstats.un.org/sdgs/indicators/regional-groups/)
+        - 'worldBankIncomeGroup'
+        - 'admUnitCount'
+        - 'meanVertices'
+        - 'minVertices'
+        - 'maxVertices'
+        - 'meanPerimeterLengthKM'
+        - 'minPerimeterLengthKM'
+        - 'maxPerimeterLengthKM'
+        - 'meanAreaSqKM'
+        - 'minAreaSqKM'
+        - 'maxAreaSqKM'
+        - 'staticDownloadLink'
+        - 'gjDownloadURL'
+        - 'tjDownloadURL'
+        - 'imagePreview'
+        - 'simplifiedGeometryGeoJSON'
+    '''
+    
+    # TODO: optimize by capturing all metadata with get_adm so that we don't
+    # have to do a second request for each country
+
+    if type(territories) == str:
+        territories = [territories]
+    for i, territory in enumerate(territories):
+        territories[i] = str.upper(territory) if _is_valid_iso3_code(territory) else _get_iso3_from_name_or_iso2(territory)
+
+    adm = 'ADM0' # TODO: support other ADM levels
+    feature_collection = get_adm(territories, adm, simplified)
+    gdf = gpd.GeoDataFrame.from_features(feature_collection)
+
+    # pg. 3 of (Daniel Runfola et al. “geoBoundaries: A global database of political ad-
+    # ministrative boundaries”. In: PloS one 15.4 (2020), e0231866.) indicates the CRS
+    # is WGS-84, but it is never made explicitly clear
+    gdf = gdf.set_crs('WGS84')
+
+    if metadata_fields:
+        if type(metadata_fields) == str:
+            metadata_fields = [metadata_fields]
+        for md_field in metadata_fields:
+            gdf[md_field] = None
+        for territory in territories:
+            md = get_metadata(territory, adm)
+            for md_field in metadata_fields:
+                gdf.loc[gdf['shapeGroup'] == territory, md_field] = md[md_field]
+    
+    return gdf
