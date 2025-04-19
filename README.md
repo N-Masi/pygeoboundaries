@@ -54,3 +54,7 @@ Allowed values for ```adm```:
 * int 0 to 5
 * int -1 (returns the smallest available ADM level)
 For more information about ADM levels, check out https://www.geoboundaries.org/index.html
+
+## Testing
+
+Run `pytest` in the terminal
