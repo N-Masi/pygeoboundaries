@@ -4,6 +4,7 @@ import pytest
 import geopandas as gpd
 from shapely.geometry import Point
 import numpy as np
+import pdb
 
 def test_one_country_no_md():
     gdf = get_gdf('USA')
@@ -56,3 +57,25 @@ def test_country_name_conversion():
     gdf = get_gdf(["SEN", 'mali'], 'Continent')
     assert np.all(gdf.shapeGroup == ['SEN', 'MLI'])
     assert np.all(gdf.Continent == 'Africa')
+
+def test_all_no_md():
+    gdf = get_gdf('ALL')
+    assert len(gdf.columns) == 6
+    assert len(gdf) == 230 # current num of territories as of April 2025
+
+def test_all_one_md():
+    gdf = get_gdf('ALL', 'Continent')
+    assert len(gdf.columns) == 7
+    assert len(gdf) == 230 # current num of territories as of April 2025
+    assert len(gdf[gdf.Continent == 'Undefined']) == 0
+
+def test_all_multiple_md():
+    gdf = get_gdf('ALL', ['worldBankIncomeGroup', 'UNSDG-subregion'])
+    assert len(gdf.columns) == 8
+    assert len(gdf) == 230 # current num of territories as of April 2025
+    assert len(gdf[gdf['UNSDG-subregion'] == 'Undefined']) == 0
+    assert set(gdf.worldBankIncomeGroup) == set(['High-income Countries', 
+                                                 'Low-income Countries',
+                                                 'Lower-middle-income Countries',
+                                                 'No income group available',
+                                                 'Upper-middle-income Countries'])

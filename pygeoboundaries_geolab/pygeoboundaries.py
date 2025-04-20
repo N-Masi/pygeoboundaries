@@ -127,8 +127,53 @@ def get_adm(territories: str | List[str],
     feature_collection = geojson.FeatureCollection(geojsons)
     return feature_collection
 
+def _correct_metadata(territory, metadata, metadata_fields):
+    '''
+    Bespoke corrections for countries with known issues; there are likely many more.
+    '''
+    
+    # Antarctica
+    if territory == 'ATA':
+        if 'Continent' in metadata_fields: metadata['Continent'] = 'Antarctica'
+        if 'UNSDG-region' in metadata_fields: metadata['UNSDG-region'] = 'Antarctica'
+        if 'UNSDG-subregion' in metadata_fields: metadata['UNSDG-subregion'] = 'Antarctica'
+        if 'worldBankIncomeGroup' in metadata_fields: metadata['worldBankIncomeGroup'] = 'No income group available'
+
+    # Bermuda
+    if territory == 'BMU':
+        if 'UNSDG-subregion' in metadata_fields: metadata['UNSDG-subregion'] = 'Northern America'
+
+    # Canada
+    if territory == 'CAN':
+        if 'UNSDG-subregion' in metadata_fields: metadata['UNSDG-subregion'] = 'Northern America'
+
+    # Greenland
+    if territory == 'GRL':
+        if 'UNSDG-subregion' in metadata_fields: metadata['UNSDG-subregion'] = 'Northern America'
+
+    # United States
+    if territory == 'USA':
+        if 'UNSDG-subregion' in metadata_fields: metadata['UNSDG-subregion'] = 'Northern America'
+
+    # Guernsey
+    if territory == 'GGY':
+        # https://databank.worldbank.org/metadataglossary/jobs/country/CHI
+        if 'worldBankIncomeGroup' in metadata_fields: metadata['worldBankIncomeGroup'] = 'High-income Countries'
+
+    # Pitcairn Island
+    if territory == 'PCN':
+        if 'worldBankIncomeGroup' in metadata_fields: metadata['worldBankIncomeGroup'] = 'No income group available'
+
+    # Kosovo
+    if territory == 'XKX':
+        # https://data.worldbank.org/country/kosovo
+        if 'worldBankIncomeGroup' in metadata_fields: metadata['worldBankIncomeGroup'] = 'Upper-middle-income Countries'
+
+    return metadata
+
 def get_gdf(territories: str | List[str], 
             metadata_fields: Optional[str | List[str]] = None, 
+            apply_metadata_corrections: bool = True,
             simplified: bool = True) -> gpd.geodataframe.GeoDataFrame:
     '''
     Returns a geopandas GeoDataFrame containing the requested territory geometry
@@ -176,10 +221,11 @@ def get_gdf(territories: str | List[str],
     # TODO: optimize by capturing all metadata with get_adm so that we don't
     # have to do a second request for each country
 
-    if type(territories) == str:
-        territories = [territories]
-    for i, territory in enumerate(territories):
-        territories[i] = str.upper(territory) if _is_valid_iso3_code(territory) else _get_iso3_from_name_or_iso2(territory)
+    if not (type(territories) == str and str.upper(territories) == 'ALL'):
+        if type(territories) == str:
+            territories = [territories]
+        for i, territory in enumerate(territories):
+            territories[i] = str.upper(territory) if _is_valid_iso3_code(territory) else _get_iso3_from_name_or_iso2(territory)
 
     adm = 'ADM0' # TODO: support other ADM levels
     feature_collection = get_adm(territories, adm, simplified)
@@ -195,8 +241,10 @@ def get_gdf(territories: str | List[str],
             metadata_fields = [metadata_fields]
         for md_field in metadata_fields:
             gdf[md_field] = None
-        for territory in territories:
+        for territory in gdf.shapeGroup:
             md = get_metadata(territory, adm)
+            if apply_metadata_corrections:
+                md = _correct_metadata(territory, md, metadata_fields)
             for md_field in metadata_fields:
                 gdf.loc[gdf['shapeGroup'] == territory, md_field] = md[md_field]
     
