@@ -79,3 +79,22 @@ def test_all_multiple_md():
                                                  'Lower-middle-income Countries',
                                                  'No income group available',
                                                  'Upper-middle-income Countries'])
+
+def test_coord_location():
+    gdf = get_gdf('ALL')
+
+    dhaka = Point(90.38749998918445, 23.712500002650515)
+    containing_country = gdf[gdf.geometry.contains(dhaka)]
+    assert len(containing_country) == 1
+    country_name = containing_country.iloc[0].shapeName
+    assert country_name == 'Bangladesh'
+
+    manhattan = Point(-73.9822, 40.7685)
+    containing_country = gdf[gdf.geometry.contains(manhattan)]
+    assert len(containing_country) == 1
+    country_name = containing_country.iloc[0].shapeName
+    assert country_name == 'United States'
+
+    pacific_ocean = Point(-152.478, 36.512)
+    containing_country = gdf[gdf.geometry.contains(pacific_ocean)]
+    assert len(containing_country) == 0

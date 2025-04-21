@@ -122,10 +122,21 @@ def get_adm(territories: str | List[str],
         # TODO: optimize by not doing a second API call for each country
     
     if type(territories) == str:
-        return geojson.loads(_get_data(territories, adm, simplified))
-    geojsons = [geojson.loads(_get_data(i, adm, simplified))['features'][0] for i in territories]
+        gjson = geojson.loads(_get_data(territories, adm, simplified))['features'][0]
+        gjson = _correct_properties(gjson)
+        return geojson.FeatureCollection(gjson)
+    geojsons = [_correct_properties(geojson.loads(_get_data(i, adm, simplified))['features'][0]) for i in territories]
     feature_collection = geojson.FeatureCollection(geojsons)
     return feature_collection
+
+def _correct_properties(gjson: geojson.feature.Feature) -> geojson.feature.Feature:
+    territory = gjson.properties['shapeGroup']
+
+    # Bangladesh
+    if territory == 'BGD':
+        gjson.properties['shapeName'] = 'Bangladesh'
+
+    return gjson
 
 def _correct_metadata(territory, metadata, metadata_fields):
     '''

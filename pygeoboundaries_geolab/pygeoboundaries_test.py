@@ -58,24 +58,3 @@ def test_get_adm():
     for i in range(6):
         assert type(get_adm('France',i)) == geojson.feature.FeatureCollection
     assert type(get_adm('Vanuatu',-1)) == geojson.feature.FeatureCollection
-
-def test_coord_location():
-    coco = get_adm('ALL', 'ADM0')
-    gdf = gpd.GeoDataFrame.from_features(coco)
-    gdf = gdf.set_crs('WGS84')
-
-    dhaka = Point(90.38749998918445, 23.712500002650515)
-    containing_country = gdf[gdf.geometry.contains(dhaka)]
-    assert len(containing_country) == 1
-    country_name = containing_country.iloc[0].shapeName
-    assert country_name == 'Bangledesh'
-
-    manhattan = Point(-73.9822, 40.7685)
-    containing_country = gdf[gdf.geometry.contains(manhattan)]
-    assert len(containing_country) == 1
-    country_name = containing_country.iloc[0].shapeName
-    assert country_name == 'United States'
-
-    pacific_ocean = Point(-152.478, 36.512)
-    containing_country = gdf[gdf.geometry.contains(pacific_ocean)]
-    assert len(containing_country) == 0
