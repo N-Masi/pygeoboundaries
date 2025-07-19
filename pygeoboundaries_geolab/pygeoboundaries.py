@@ -119,6 +119,8 @@ def get_adm(territories: str | List[str],
     if territories == 'ALL':
         md = get_metadata('ALL', adm)
         territories = [country['boundaryISO'] for country in md]
+        if not 'IND' in territories:
+            territories.append('IND') # addresses issue #4201 of geoboundaries api (https://github.com/wmgeolab/geoBoundaries/issues/4201)
         # TODO: optimize by not doing a second API call for each country
     
     if type(territories) == str:
